@@ -1,0 +1,53 @@
+---
+- name: Host configuration
+  hosts: all
+  module_defaults: &module_defaults
+    ansible.builtin.apt:
+      cache_valid_time: 300
+    ansible.builtin.template:
+      backup: true
+    ansible.builtin.copy:
+      backup: true
+  roles:
+    - role: network
+  tasks:
+    - name: Do full upgrade
+      become: true
+      ansible.builtin.apt:
+        upgrade: full
+    - name: Check if reboot required
+      register: _
+      changed_when: _.stat.exists
+      notify: Reboot system
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+  handlers:
+    - name: Reboot system
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+
+- name: Application configuration
+  hosts: all
+  module_defaults: *module_defaults
+  roles:
+    - role: ssh-daemon
+    - role: web-server
+    - role: firewall
+
+- name: Hardening
+  hosts: all
+  module_defaults: *module_defaults
+  roles:
+    # - role: devsec.hardening.os_hardening
+    #   become: true
+    # - role: devsec.hardening.ssh_hardening
+    #   become: true
+    - role: devsec.hardening.nginx_hardening
+      become: true
+
+- name: Security scanning
+  hosts: all
+  module_defaults: *module_defaults
+  roles:
+    - role: openscap

@@ -1,0 +1,47 @@
+---
+- name: Install openscap
+  become: true
+  ansible.builtin.apt:
+    name:
+      - libopenscap8
+      - unzip
+
+- name: Download security guide # noqa: risky-file-permissions
+  register: _ssg_zip
+  ansible.builtin.get_url:
+    url: https://github.com/ComplianceAsCode/content/releases/download/v0.1.72/scap-security-guide-0.1.72.zip
+    dest: ~/
+    checksum: sha512:https://github.com/ComplianceAsCode/content/releases/download/v0.1.72/scap-security-guide-0.1.72.zip.sha512
+
+- name: Unarchive security guide
+  ansible.builtin.unarchive:
+    src: "{{ _ssg_zip.dest }}"
+    dest: ~/
+    remote_src: true
+    creates: ~/scap-security-guide-0.1.72
+
+- name: Generate SCAP report
+  register: _
+  changed_when: _.rc == 2
+  failed_when: _.rc == 1
+  ansible.builtin.command: |
+    oscap xccdf eval --results oscap_xccdf_report.xml --report oscap_xccdf_report.html --fetch-remote-resources --profile xccdf_org.ssgproject.content_profile_standard scap-security-guide-0.1.72/ssg-ubuntu2204-ds.xml
+
+- name: Fetch SCAP report
+  ansible.builtin.fetch:
+    src: ~/oscap_xccdf_report.html
+    dest: oscap_xccdf_report.html
+    flat: true
+
+- name: Generate SCAP ansible remediation
+  register: _
+  changed_when: _.rc == 2
+  failed_when: _.rc == 1
+  ansible.builtin.command: |
+    oscap xccdf generate fix --fix-type ansible --results oscap_xccdf_remediation.yaml --fetch-remote-resources --profile xccdf_org.ssgproject.content_profile_standard oscap_xccdf_report.xml
+
+- name: Fetch SCAP ansible remediation
+  ansible.builtin.fetch:
+    src: ~/oscap_xccdf_remediation.yaml
+    dest: oscap_xccdf_remediation.yaml
+    flat: true

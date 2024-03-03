@@ -1,0 +1,14 @@
+---
+- name: Generate netplan
+  become: true
+  register: _
+  changed_when: _.rc == 0
+  ansible.builtin.command:
+    cmd: netplan generate
+
+- name: Apply netplan
+  become: true
+  register: _
+  changed_when: _.rc == 0
+  ansible.builtin.command:
+    cmd: netplan apply

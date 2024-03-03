@@ -1,0 +1,6 @@
+---
+ungrouped:
+  hosts:
+    ec2-63-34-139-208.eu-west-1.compute.amazonaws.com:
+      external_interface: ens5
+      internal_interface: ens6

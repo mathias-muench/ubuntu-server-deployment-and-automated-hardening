@@ -1,0 +1,11 @@
+---
+- name: Ensure sshd listens only on public interface
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/50-bind-interface.conf
+    content: |
+      ListenAddress {{ ansible_facts[external_interface]['ipv4']['address'] }}
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  notify: Reload sshd

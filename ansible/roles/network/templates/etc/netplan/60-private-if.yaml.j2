@@ -1,0 +1,14 @@
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {{ _j2_internal_interface }}:
+      dhcp4: no
+      link-local: []
+
+  vlans:
+    vlan150:
+      id: 150
+      link: {{ _j2_internal_interface }}
+      addresses: [10.200.16.97/29]

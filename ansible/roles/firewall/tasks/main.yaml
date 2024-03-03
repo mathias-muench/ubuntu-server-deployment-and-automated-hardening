@@ -1,0 +1,39 @@
+---
+- name: Check firewall rules # noqa: args[module]
+  check_mode: true
+  become: true
+  community.general.ufw: "{{ item }}"
+  register: ufw_rules
+  loop: &rules
+    - rule: allow
+      direction: in
+      interface: "{{ external_interface }}"
+      name: OpenSSH
+    - rule: allow
+      direction: in
+      interface: "{{ external_interface }}"
+      name: Nginx Full
+    - rule: allow
+      direction: in
+      interface: "{{ internal_interface }}"
+      port: 9000
+      proto: tcp
+      src: 10.200.16.100
+
+- name: Clear and set firewall rules # noqa: no-handler
+  when: ufw_rules.changed
+  block:
+    - name: Reset firewall
+      become: true
+      community.general.ufw:
+        state: reset
+
+    - name: Set firewall rules # noqa: args[module]
+      become: true
+      community.general.ufw: "{{ item }}"
+      loop: *rules
+
+- name: Enable firewall
+  become: true
+  community.general.ufw:
+    state: enabled

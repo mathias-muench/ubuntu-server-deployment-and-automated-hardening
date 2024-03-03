@@ -1,0 +1,10 @@
+---
+ansible-navigator:
+  execution-environment:
+    image: ansible-execution-env:latest
+    pull:
+      policy: never
+  logging:
+    level: critical
+  playbook-artifact:
+    enable: false

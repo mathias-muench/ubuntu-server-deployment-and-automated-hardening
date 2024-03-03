@@ -1,0 +1,12 @@
+---
+- name: Create configuration for second interface
+  become: true
+  vars:
+    _j2_internal_interface: "{{ internal_interface }}"
+  ansible.builtin.template:
+    src: etc/netplan/60-private-if.yaml.j2
+    dest: /etc/netplan/60-private-if.yaml
+    mode: g-rwx,o-rwx
+  notify:
+    - Generate netplan
+    - Apply netplan
